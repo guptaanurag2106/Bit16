@@ -1,0 +1,95 @@
+ALU functions
+INPUT:
+-   x[16]
+-   y[16]
+
+OUTPUT:
+-   Constants           -1, 0, 1
+-   Return one?         x, y
+-   Logical             x&y, x|y, !x, !y
+-   Bit shifts          x>>1, y>>1, x<<1, y<<1
+-   Arithmetic          x+y, x-y, y-x
+-   Adv. Arithmetic?    x*y, x/y
+-   Flags               zero, negative
+
+Big Endian
+
+REGISTERS:
+A (0x0) General Purpose Register
+B (0x0) General Purpose Register
+C (0x2) General Purpose Register
+D (0x3) General Purpose Register
+HL (0x4) HL imm16 bit Register
+
+F flag (0x5) Flag register: left-to-right
+zero, negative, i/o
+
+i/o flag specifies usage of PORT or RAM for LW and SW instructions, can be used as a replacement for dedicated instructions like
+0 -> use current RAM
+1 -> use PORT
+INB  reg, red/immg  : reg <- PORT[reg/imm8]
+OUTB reg/imm8, reg  : PORT[reg/imm8] <- reg
+
+INSTRUCTIONS:
+16 bit bus:
+4 reserved for opcode
+3 bit for register address (see above)
+imm8 -> 8 bit immediate
+imm16 -> 16 bit immediate
+
+0x0  NOP                 : no operation, go to next instruction PC++
+0x1  HALT                : stops computer clock program finish
+0x2  MW reg, reg/imm8    : reg <- reg/imm8
+0x3  MWL imm8            : HL_L <- imm8
+0x4  MWH imm8            : HL_H <- imm8
+0x5  LW reg, [HL/imm8]   : reg <- [HL/imm8] HL contains the 16 bit address of the RAM, RAM access is according to MB
+0x6  SW [HL/imm8], reg   : [HL/imm8] <- reg HL contains the 16 bit address of the RAM, RAM access is according to MB
+0x7  ADD reg, reg/imm8   : reg <- reg + reg/imm8
+0x8  SUB reg, reg/imm8   : reg <- reg - reg/imm8
+0x9  AND reg, reg/imm8   : reg <- reg ^ reg/imm8
+0xa  OR reg, reg/imm8    : reg <- reg | reg/imm8
+0xb  NOT reg, reg/imm8   : reg <- ~(reg/imm8)
+0xc  JMPZ reg/imm8       : PC <- HL if reg/imm8==0 else NOP
+0xd  JMPN                : PC <- HL if flag[1] else NOP
+0xe  PUSH imm8/reg       : [SP--] <- imm8/reg
+0xf  POP  reg            : reg <- [++SP]
+ 
+Instruction format
+XXXXYZZZ
+
+XXXX 4 bit opcode
+Y    1 bit 0 if reg/HL, 1 if imm8
+ZZZ  3 bit register identifier
+
+* instructions with reg, reg arguments have the second register encoded in the
+  first three bits of the second instruction byte
+*  Z-bits are ALWAYS reg.
+
+SAMPLE
+0x0  NOP                : 0000 0000 0000 0000
+0x1  HALT               : 0001 0000 0000 0000
+0x2  MW reg, reg/imm8   : 0010 0zzz ZZZ0 0000 or 0010 1zzz NNNN NNNN
+0x3  MWL imm8           : 0011 0000 NNNN NNNN
+0x4  MWH imm8           : 0100 0000 NNNN NNNN
+0x5  LW reg, [HL/imm8]  : 0101 0zzz ZZZ0 0000 or 0101 1zzz NNNN NNNN
+0x6  SW [HL/imm8], reg  : 0110 0zzz ZZZ0 0000 or 0110 1zzz NNNN NNNN
+0x7  ADD reg, reg/imm8  : 0111 0zzz ZZZ0 0000 or 0111 1zzz NNNN NNNN
+0x8  SUB reg, reg/imm8  : 1000 0zzz ZZZ0 0000 or 1000 1zzz NNNN NNNN
+0x9  AND reg, reg/imm8  : 1001 0zzz ZZZ0 0000 or 1001 1zzz NNNN NNNN
+0xa  OR reg, reg/imm8   : 1010 0zzz ZZZ0 0000 or 1010 1zzz NNNN NNNN
+0xb  NOT reg, reg/imm8  : 1011 0zzz ZZZ0 0000 or 1011 1zzz NNNN NNNN
+0xc  JMPZ reg/imm8      : 1100 0ZZZ 0000 0000 or 1100 1000 NNNN NNNN
+0xd  JMPN               : 1101 0000 0000 0000
+0xe  NOT reg, reg/imm8  : 1110 
+0xf  NOT reg, reg/imm8  : 1111
+
+MEMORY LAYOUT
+0x0000..0x7FFF: GENERAL PURPOSE ROM 32768*16bit
+0x8000..0xBFFF: GENERAL PURPOSE RAM (BANKED/VRAM) 16384*16bit
+0xC000..0xFDFF: GENERAL PURPOSE RAM 15872*16bit
+0xFE00..0xFEFF: STACK (RECOMMENDED), else GP RAM 256*16bit
+0xFF00..0xFFF9: GENERAL PURPOSE RAM 10*16bit
+0xFFFA..0xFFFA: MB/(M)emory (B)ank 16bit 0x0 or 0x4000
+0xFFFB..0xFFFB: UNUSED
+0xFFFC..0xFFFD: SP/(S)tack (P)ointer
+0xFFFE..0xFFFF: PC/(P)rogram (C)ounter
