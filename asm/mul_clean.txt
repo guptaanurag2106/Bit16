@@ -1,0 +1,12 @@
+MW A,5
+MW B,32
+MW C,A
+ADD A,B
+SUB C,1
+
+
+JMPZ C
+
+
+JMPZ 0
+HALT
