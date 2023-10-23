@@ -1,6 +1,7 @@
 .vscode
-# Created by https://www.toptal.com/developers/gitignore/api/c++,cmake
-# Edit at https://www.toptal.com/developers/gitignore?templates=c++,cmake
+
+/asm/*.txt
+/asm/*.bin
 
 ### C++ ###
 # Prerequisites
@@ -49,8 +50,5 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-### CMake Patch ###
 # External projects
 *-prefix/
-
-# End of https://www.toptal.com/developers/gitignore/api/c++,cmake
