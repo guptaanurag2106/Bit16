@@ -4,21 +4,15 @@ Bit16 is a 16-bit CPU, emulator, assembler, circuit with fully custom architectu
 
 ## Table of Contents
 
--   [Overview](#overview)
--   [Architecture Details](#architecture-details)
-    -   [Register Set](#register-set)
-    -   [Instruction Set](#instruction-set)
-    -   [Memory Layout](#memory-layout)
--   [Getting Started](#getting-started)
-    -   [Installation](#installation)
+- [Overview](#overview)
+- [Architecture Details](#architecture-details)
+  - [Register Set](#register-set)
+  - [Instruction Set](#instruction-set)
+  - [Memory Layout](#memory-layout)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
 
 ## Overview
-
-The Bit16 project provides a framework for creating, testing, and experimenting with custom 16-bit CPU architectures. It includes the following components:
-
--   A 16-bit CPU emulator that can execute programs written in the custom assembly language.
--   An assembler for translating assembly code into machine code.
--   Example programs and projects to demonstrate the capabilities of the CPU.
 
 ## Architecture Details
 
@@ -26,10 +20,10 @@ The Bit16 CPU is a custom 16-bit architecture designed with the following specif
 
 ### Register Set
 
--   A (0x0): General Purpose Register
--   B (0x0): General Purpose Register
--   C (0x2): General Purpose Register
--   SR (0x3) Settings Register: left-to-right
+- A (0x0): General Purpose Register
+- B (0x0): General Purpose Register
+- C (0x2): General Purpose Register
+- SR (0x3) Settings Register: left-to-right
     i/o, MB/(M)emory (B)ank (0x6) 0x0 for General Purpose RAM or 1 for VRAM
 
     i/o flag specifies usage of PORT or RAM for LW and SW instructions, can be used as a replacement for dedicated instructions like
@@ -38,12 +32,12 @@ The Bit16 CPU is a custom 16-bit architecture designed with the following specif
     0 -> use current RAM
     1 -> use PORT
 
--   HL (0x4): HL 16-bit Register
--   Flag (0x5): Flag register with the following flags (left-to-right):
-    -   Zero
-    -   Negative
--   SP (0x6) Stack Pointer Register
--   PC (0x7) Program Counter Register
+- HL (0x4): HL 16-bit Register
+- Flag (0x5): Flag register with the following flags (left-to-right):
+  - Zero
+  - Negative
+- SP (0x6) Stack Pointer Register
+- PC (0x7) Program Counter Register
 
 ### Instruction Set
 
@@ -72,10 +66,10 @@ The Bit16 CPU supports the following instructions, each encoded with a 4-bit opc
 
 The memory layout of the Bit16 CPU is as follows:
 
--   0x0000..0xFFFF: GENERAL PURPOSE ROM 65536\*16bit
--   0x0000..0x3FFF: GENERAL PURPOSE RAM (BANKED/VRAM) 16384\*16bit
--   0x0000..0xFDFF: GENERAL PURPOSE RAM 65024\*16bit
--   0xFE00..0xFFFF: STACK (RECOMMENDED), else GP RAM 512\*16bit
+- 0x0000..0x7FFF: GENERAL PURPOSE ROM                32768*16bit
+- 0x8000..0xBFFF: GENERAL PURPOSE RAM (BANKED/VRAM)  16384*16bit
+- 0xC000..0xFDFF: GENERAL PURPOSE RAM                15872*16bit
+- 0xFF00..0xFFFF: STACK (RECOMMENDED), else GP RAM   256*16bit
 
 This memory layout provides a framework for storing program code, data, and stack information.
 

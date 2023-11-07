@@ -39,7 +39,6 @@ struct Instruction {
   InstructionType type;
   InstructionParams param1;
   InstructionParams param2;
-  Instruction(){};
   Instruction(std::string m, uint8_t o, InstructionType t)
       : mnemonic(m), opcode(o), type(t) {}
 
@@ -88,7 +87,7 @@ class AssemblyParser {
   std::ifstream file;
   std::string file_name;
   std::string file_content, current_input;
-  std::map<std::string, int> labels;
+  std::map<std::string, uint16_t> labels;
 
   std::vector<Instruction> instructions;
 
@@ -126,7 +125,7 @@ class AssemblyParser {
   }
 
   // convert string to immediate
-  uint8_t stringToImm8(std::string input) {
+  uint8_t stringToImm8(std::string input, const std::string message = "") {
     // std::istringstream iss(v);
     // int intValue;
     // if (iss >> intValue) {
@@ -148,12 +147,31 @@ class AssemblyParser {
       if (pos == input.length()) {
         return value;
       } else {
-        raiseError("Conversion failed. Not a valid number.");
+        raiseError(message);
       }
     } catch (const std::invalid_argument& e) {
-      raiseError("Invalid argument: ");
+      raiseError(message);
     } catch (const std::out_of_range& e) {
-      raiseError("Out of range: ");
+      raiseError(message);
+    }
+    return 1;
+  }
+
+  uint16_t stringToImm16(std::string input, const std::string message = "") {
+    try {
+      size_t pos;
+      uint16_t value = std::stoul(
+          input, &pos, 0);  // The '0' parameter allows automatic base detection
+
+      if (pos == input.length()) {
+        return value;
+      } else {
+        raiseError(message);
+      }
+    } catch (const std::invalid_argument& e) {
+      raiseError(message);
+    } catch (const std::out_of_range& e) {
+      raiseError(message);
     }
     return 1;
   }
@@ -162,7 +180,7 @@ class AssemblyParser {
   AssemblyParser(const std::string& file_name);
   void parseFile();
   void skip();
-  std::pair<std::string, std::string> getCleanOutput();
-  void outputBinary(bool clean_file);
+  void outputBinary(bool clean_file, int line_nums);
+  std::pair<std::string, std::string> getCleanOutput(int line_nums);
   ~AssemblyParser();
 };
