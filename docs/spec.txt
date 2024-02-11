@@ -18,7 +18,9 @@ REGISTERS:
 A (0x0) General Purpose Register
 B (0x1) General Purpose Register
 C (0x2) General Purpose Register
-SR (0x3) Settings Register: left-to-right
+D (0x3) General Purpose Register
+E (0x4) General Purpose Register
+SR (0x5) Settings Register: left-to-right
   i/o, MB/(M)emory (B)ank (0x6) 0x0 for General Purpose RAM or 1 for VRAM
 
   i/o flag specifies usage of PORT or RAM for LW and SW instructions, can be used as a replacement for dedicated instructions like
@@ -26,12 +28,14 @@ SR (0x3) Settings Register: left-to-right
   OUTB reg/imm8, reg  : PORT[reg/imm8] <- reg
   0 -> use current RAM
   1 -> use PORT
-HL (0x4) HL imm16 bit Register
+HL (0x6) HL imm16 bit Register
 
-F (0x5) Flag register: left-to-right
-zero, negative
-SP (0x6) Stack Pointer Register
-PC (0x7) Program Counter Register
+F (0x7) Flag register: left-to-right
+zero, negative, carry
+
+
+SP Stack Pointer Register
+PC Program Counter Register
 
 INSTRUCTIONS:
 16 bit bus:
@@ -50,7 +54,7 @@ imm16 -> 16 bit immediate
 0x7  ADD reg, reg/imm8   : reg <- reg + reg/imm8
 0x8  SUB reg, reg/imm8   : reg <- reg - reg/imm8
 0x9  AND reg, reg/imm8   : reg <- reg ^ reg/imm8
-0xa  OR reg, reg/imm8    : reg <- reg | reg/imm8
+0xa  ADDC reg, reg/imm8  : reg <- reg + reg/imm8 + c (carry)
 0xb  NOT reg, reg/imm8   : reg <- ~(reg/imm8)
 0xc  JMPZ reg/imm8       : PC <- HL if reg/imm8 == 0 else NOP
 0xd  JMPN reg/imm8       : PC <- reg/imm8 if flag[1] else NOP
@@ -74,8 +78,8 @@ SAMPLE
 0x2  MW reg, reg/imm8   : 0010 0zzz ZZZ0 0000 or 0010 1zzz NNNN NNNN
 0x3  MWL imm8           : 0011 0000 NNNN NNNN
 0x4  MWH imm8           : 0100 0000 NNNN NNNN
-0x5  LW reg, [HL/imm8]  : 0101 0zzz ZZZ0 0000 or 0101 1zzz NNNN NNNN
-0x6  SW [HL/imm8], reg  : 0110 0zzz ZZZ0 0000 or 0110 1zzz NNNN NNNN
+0x5  LW reg, [reg/imm8]  : 0101 0zzz ZZZ0 0000 or 0101 1zzz NNNN NNNN
+0x6  SW [reg/imm8], reg  : 0110 0zzz ZZZ0 0000 or 0110 1zzz NNNN NNNN
 0x7  ADD reg, reg/imm8  : 0111 0zzz ZZZ0 0000 or 0111 1zzz NNNN NNNN
 0x8  SUB reg, reg/imm8  : 1000 0zzz ZZZ0 0000 or 1000 1zzz NNNN NNNN
 0x9  AND reg, reg/imm8  : 1001 0zzz ZZZ0 0000 or 1001 1zzz NNNN NNNN
@@ -83,11 +87,13 @@ SAMPLE
 0xb  NOT reg, reg/imm8  : 1011 0zzz ZZZ0 0000 or 1011 1zzz NNNN NNNN
 0xc  JMPZ reg/imm8      : 1100 0ZZZ 0000 0000 or 1100 1000 NNNN NNNN
 0xd  JMPN reg/imm8      : 1101 0ZZZ 0000 0000 or 1101 1000 NNNN NNNN
-0xe  PUSH imm8/reg      : [SP--] <- imm8/reg
-0xf  POP  reg           : reg <- [++SP]
+0xe  PUSH imm8/reg      : 1110 1ZZZ 0000 0000 or 1110 0000 NNNN NNNN
+0xf  POP  reg           : 1111 1ZZZ 0000 0000
 
 MEMORY LAYOUT
 0x0000..0x7FFF: GENERAL PURPOSE ROM                32768*16bit
 0x8000..0xBFFF: GENERAL PURPOSE RAM (BANKED/VRAM)  16384*16bit
-0xC000..0xFDFF: GENERAL PURPOSE RAM                15872*16bit
+0xC000..0xFDFD: GENERAL PURPOSE RAM                15870*16bit
+0xFDFE..0xFDFE: KEYBOARD                           1*16bit
+oxFDFF..0xFDFF: UNUSED                             1*16bit
 0xFF00..0xFFFF: STACK (RECOMMENDED), else GP RAM   256*16bit

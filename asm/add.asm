@@ -1,11 +1,11 @@
-     /* AddFourNumbers.asm
+     ;AddFourNumbers.asm
 
-section .text
-global _start */
+;section .text
+;global _start 
 
 .start 0x0000:
 
-    MW A, 0          // Initialize A to 0 (the result)
+    MW A, 0          ;Initialize A to 0 (the result)
     
     MWL 0x00
     MWH 0xfe
@@ -24,6 +24,6 @@ global _start */
     MWH 0xfe
     SW HL, A
 
-    // Halt the program or continue with other instructions as needed
+    ; Halt the program or continue with other instructions as needed
     HALT
 

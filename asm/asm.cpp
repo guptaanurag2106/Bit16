@@ -82,6 +82,28 @@ void AssemblyParser::parseFile() {
 
       } else if (line[0] == '@') {
         label_index += 2;
+      } else if (line.substr(0, 4) == "const") {
+        std::vector<std::string> instruction_line;
+        std::string s;
+        for (int i = 0; i < line.size(); i++) {
+          if (line[i] != ' ') {
+            s += line[i];
+          } else {
+            instruction_line.push_back(s);
+            s = "";
+          }
+        }
+        if (s != "") instruction_line.push_back(s);
+        if (instruction_line[0] != "const" || instruction_line.size() != 3)
+          raiseError(file_name + ".asm Line: " + std::to_string(line_index) +
+                     +" Unknown Syntax: " + line);
+
+        constants[instruction_line[1]] = stringToImm8(
+            instruction_line[2],
+            file_name + ".asm Line: " + std::to_string(line_index) +
+                +" Invalid Constant: " + instruction_line[2]);
+
+        label_index += 1;
       } else {
         label_index += 1;
       }
@@ -142,10 +164,15 @@ void AssemblyParser::parseFile() {
           raiseError(file_name + ".asm Line: " + std::to_string(line_index) +
                      +" Unknown Directive: " + line);
         }
-        uint16_t address = stringToImm16(
-            instruction_line[1],
-            file_name + ".asm Line: " + std::to_string(line_index) +
-                +" Invalid Address: " + instruction_line[1]);
+        uint16_t address;
+        if (constants.find(instruction_line[1]) != constants.end()) {
+          address = constants[instruction_line[1]];
+        } else {
+          address = stringToImm16(
+              instruction_line[1],
+              file_name + ".asm Line: " + std::to_string(line_index) +
+                  +" Invalid Address: " + instruction_line[1]);
+        }
         int current_ins = instructions.size();
         if (address < current_ins) {
           raiseError(file_name + ".asm Line: " + std::to_string(line_index) +
@@ -168,6 +195,9 @@ void AssemblyParser::parseFile() {
         if (line[i] != ' ') {
           s += line[i];
         } else {
+          if (constants.find(s) != constants.end()) {
+            s = std::to_string(constants[s]);
+          }
           instruction_line.push_back(s);
           s = "";
         }
@@ -390,10 +420,10 @@ void AssemblyParser::skip() {
   // }
 }
 
-std::pair<std::string, std::string> AssemblyParser::getCleanOutput(
+std::pair<std::string, std::vector<uint16_t>> AssemblyParser::getCleanOutput(
     int line_nums) {
   std::string output = "";
-  std::string bin = "";
+  std::vector<uint16_t> bin;
   for (auto i : instructions) {
     std::string mnemonic = i.mnemonic;
     uint8_t opcode = i.opcode;
@@ -461,8 +491,9 @@ std::pair<std::string, std::string> AssemblyParser::getCleanOutput(
 
     output += current;
     output += "\n";
-    bin += current_bin;
-    bin += "\n";
+    std::bitset<16> bitset(current_bin);
+    uint16_t result = static_cast<uint16_t>(bitset.to_ulong());
+    bin.push_back(result);
   }
 
   if (line_nums != -2) {
@@ -472,7 +503,9 @@ std::pair<std::string, std::string> AssemblyParser::getCleanOutput(
                  "kiB is smaller than program size " +
                  std::to_string(instructions.size() * 16 / 8192) + "kiB");
     for (int i = 0; i < extra; i++) {
-      bin += "0000000000000000\n";
+      std::bitset<16> bitset("0000000000000000");
+      uint16_t result = static_cast<uint16_t>(bitset.to_ulong());
+      bin.push_back(result);
       output += "NOP\n";
     }
   }
@@ -481,15 +514,25 @@ std::pair<std::string, std::string> AssemblyParser::getCleanOutput(
 }
 
 void AssemblyParser::outputBinary(bool clean_file, int line_nums) {
-  std::pair<std::string, std::string> output = getCleanOutput(line_nums);
+  std::pair<std::string, std::vector<uint16_t>> output =
+      getCleanOutput(line_nums);
   if (clean_file) {
     std::fstream cleanfile(file_name + "_clean.txt", std::fstream::out);
-    cleanfile << output.first;
+    if (cleanfile.is_open()) {
+      cleanfile << output.first;
+    } else {
+      raiseError("Error opening file: " + file_name + "_clean.txt");
+    }
     cleanfile.close();
   }
-  std::fstream binaryfile(file_name + ".bin", std::fstream::out);
-  binaryfile << output.second;
-  binaryfile.close();
+  std::ofstream binaryfile(file_name + ".bin", std::ios::binary);
+  if (binaryfile.is_open()) {
+    binaryfile.write(reinterpret_cast<const char*>(output.second.data()),
+                     output.second.size());
+    binaryfile.close();
+  } else {
+    raiseError("Error opening file: " + file_name + ".bin");
+  }
 }
 
 AssemblyParser::~AssemblyParser() {
